@@ -1,0 +1,31 @@
+[project]
+authors = [{name = "jcav", email = "micojcav@outlook.com"}]
+name = "myraytrace"
+requires-python = "== 3.13"
+version = "0.1.0"
+dependencies = ["jax>=0.6.0,<0.7", "pyvista[all]>=0.44.1,<0.45", "flax>=0.10.6,<0.11"]
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64"]
+
+[tool.pixi.pypi-options]
+index-url = "https://mirrors.cernet.edu.cn/pypi/web/simple"
+
+
+[tool.pixi.pypi-dependencies]
+myraytrace = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+ipykernel = ">=6.29.5,<7"
+matplotlib = ">=3.10.3,<4"
+pillow = ">=11.2.1,<12"
+jaxtyping = ">=0.2.36,<0.3"
+icecream = ">=2.1.4,<3"
+loguru = "*"
