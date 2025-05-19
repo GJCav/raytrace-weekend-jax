@@ -506,10 +506,18 @@ class RaytraceRenderer:
                     # that hit an object.
                     continue
 
-                diffuse_obj = record.subset((~record.hit_light_src) & record.enable_diffuse)
+                diffuse_obj = record.subset(
+                    (record.ray.t < jnp.inf) & 
+                    (~record.hit_light_src) & 
+                    record.enable_diffuse
+                )
                 next_round.append(self._get_diffuse_ray(diffuse_obj, randkey=next(randkey_gen)))
 
-                specular_obj = record.subset((~record.hit_light_src) & record.enable_specular)
+                specular_obj = record.subset(
+                    (record.ray.t < jnp.inf) & 
+                    (~record.hit_light_src) & 
+                    record.enable_specular
+                )
                 next_round.append(self._get_specular_ray(specular_obj, randkey=next(randkey_gen)))
             
             round_count += 1

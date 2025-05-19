@@ -72,6 +72,9 @@ class Mesh(Hitable):
         self.point_color = point_color
         self.light_source = light_source
 
+        self._uv_img = None
+        self._uv = None     # If enable, should be (N, 2)
+
         self.enable_diffuse = enable_diffuse
         self.diffuse_strength = diffuse_strength
 
@@ -349,12 +352,25 @@ class Mesh(Hitable):
         b2 = b2[ray_idx]    # shape (K,)
 
         hit_faces = faces[tri_idx]  # shape (K, 3)
-        point_color = self.point_color       # shape (V, 3), V is the number of vertices
-        hit_point_color = (
-            point_color[hit_faces[:, 0]] * (1 - b1 - b2)[:, None] +
-            point_color[hit_faces[:, 1]] * b1[:, None] +
-            point_color[hit_faces[:, 2]] * b2[:, None]
-        ) # shape (K, 3)
+        if self._uv_img is None:
+            point_color = self.point_color       # shape (V, 3), V is the number of vertices
+            hit_point_color = (
+                point_color[hit_faces[:, 0]] * (1 - b1 - b2)[:, None] +
+                point_color[hit_faces[:, 1]] * b1[:, None] +
+                point_color[hit_faces[:, 2]] * b2[:, None]
+            ) # shape (K, 3)
+        else:
+            uv = self._uv     # shape (V, 2), V is the number of vertices
+            hit_point_uv = (  # shape (K, 2)
+                uv[hit_faces[:, 0]] * (1 - b1 - b2)[:, None] +
+                uv[hit_faces[:, 1]] * b1[:, None] +
+                uv[hit_faces[:, 2]] * b2[:, None]
+            )
+            img = self._uv_img
+            u_idx = jnp.clip((hit_point_uv[:, 0] * img.shape[0]).astype(jnp.int32), 0, img.shape[0] - 1)
+            v_idx = jnp.clip((hit_point_uv[:, 1] * img.shape[1]).astype(jnp.int32), 0, img.shape[1] - 1)
+            hit_point_color = img[u_idx, v_idx]  # shape (K, 3)
+
         point_normals = self.point_normals   # shape (V, 3)
         hit_point_normals = (
             point_normals[hit_faces[:, 0]] * (1 - b1 - b2)[:, None] +
@@ -450,14 +466,11 @@ class Mesh(Hitable):
             phi = jnp.arctan2(point_normals[:, 1], point_normals[:, 0])  # shape (N,)
             theta = jnp.arccos(point_normals[:, 2])
 
-            u = ((phi % 2*jnp.pi) + jnp.pi) / (2 * jnp.pi) # shape (N,), range [0, 1)
-            v = (theta % jnp.pi) / jnp.pi
+            u = (theta % jnp.pi) / jnp.pi
+            v = ((phi + jnp.pi) % (2*jnp.pi)) / (2 * jnp.pi) # shape (N,), range [0, 1)
 
-            u_idx = jnp.clip((u * img_jax.shape[1]).astype(jnp.int32), 0, img_jax.shape[1] - 1)
-            v_idx = jnp.clip((v * img_jax.shape[0]).astype(jnp.int32), 0, img_jax.shape[0] - 1)
-            
-            uv_color = img_jax[v_idx, u_idx]  # shape (N, 3)
-            mesh.point_color = uv_color
+            mesh._uv_img = img_jax
+            mesh._uv = jnp.stack((u, v), axis=-1)  # shape (N, 2)
         return mesh
 
 
