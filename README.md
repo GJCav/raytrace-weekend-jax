@@ -95,3 +95,11 @@
 **拧巴的反射特性模拟**
 
 漫反射、高光被独立模拟，编写了两套代码。但这两个反射现象应该可以被统一建模，后续可以考虑 BRDF 等反射模型。
+
+
+
+## 相关项目
+
+- [ray tracing in one weekend](https://github.com/RayTracing/raytracing.github.io)
+- [A python-numpy implementation of Ray Tracing in One Weekend](https://github.com/alfiopuglisi/raytrace_weekend_numpy)
+- [A pytorch implementation of ray tracing in one weekend](https://github.com/miguelvc6/torch-tracer/tree/main)
